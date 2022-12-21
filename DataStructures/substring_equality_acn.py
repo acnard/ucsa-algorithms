@@ -62,6 +62,9 @@ class HashString(object):
 
         self.hashes = self.polyhashes()
 
+        self.yvals = [1]  # to memoize y = x^n mod prime, first entry (for n=0) is 1
+
+
     def forward_polyhash(self, s):
         """
         utility function, for testing
@@ -86,6 +89,7 @@ class HashString(object):
             tot = (tot*self.x + ord(c)) % self.prime
 
         return tot
+
 
     def polyhashes(self):
         """
@@ -122,6 +126,26 @@ class HashString(object):
 
         return h
 
+    def get_yval (self, n):
+        """
+        n is an int, for which we want to compute y = (self.x^n) mod self.prime
+        (ie multiply x by itself n times)
+        uses memoization in self.yvals, where:
+        yvals[n] contains the corresponding result
+        """
+        last_n = len(self.yvals)-1  #max value of n for which we have already memoized
+
+        if n <= last_n:             
+            return self.yvals[n]    # value is already memoized
+        else: 
+            m = n - last_n   #need to do m more multiplications
+            y = self.yvals[-1] #get the last y value
+            for _ in range(m):
+                y = (y*self.x) % self.prime
+                self.yvals.append(y)
+            return y
+
+
     def hash_substring(self, i, n):
         """
         computes the hash of the substring of self.s having
@@ -133,9 +157,11 @@ class HashString(object):
 
         ## compute y = (x^n) mod prime 
         ## multiply x by itself n times
-        y=1
-        for _ in range(n):
-            y = (y*self.x) % self.prime
+        # y=1
+        # for _ in range(n):
+        #     y = (y*self.x) % self.prime
+
+        y= self.get_yval(n)      
 
         ## hash of substring starting at i of length n is equal to
         ##    H(0-->end) - x^n * H(0-->start)
@@ -159,10 +185,12 @@ class HashString(object):
        # print("substring hash is", hash_ss)
         return hash_ss
 
+
+
     def check_equality(self, a=0, b=0, l=1):
         """
-        a and b are the start indices of two length-l substrings of self.x
-        checks if the substrings a and b are equal
+        a and b are the start indices of two length-l substrings of self.s
+        checks if the substrings a and b are e,qual
         returns True if they are
         False otherwise
 
@@ -209,7 +237,30 @@ def test(s):
     print("hash using prefixes =", hash1)
     print("direct hash = ", hash2)
 
+def test2(s):
+    """
+    test function for HashString class
+    s is a string
+    """
+    hs = HashString(s)
+    n = len(s)
 
+    ## get two random start positions in this string
+    a = randint(0, n-1)
+    b = randint(0, n-1)
+
+    ## figure out max substring length for these two start indices
+    l_max = n - max(a, b)
+
+    ## get a random substring length
+    l = randint(1, l_max)
+
+    print("checking equality for a=", a, ", b=",b, ", length=",l)
+
+    if hs.check_equality(a, b, l):
+        print("yes")
+    else:
+        print("no")
 
 
 
