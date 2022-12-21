@@ -22,11 +22,6 @@ X =randint(1, 10**9)
 
 
 
-def print_occurrences(output):
-    print(' '.join(map(str, output)))
-
-
-
 
 def polyhash(s, x=263, prime=PRIME1):
     # The ord() function returns an integer c, representing the Unicode character.
@@ -67,10 +62,36 @@ class HashString(object):
 
         self.hashes = self.polyhashes()
 
+    def forward_polyhash(self, s):
+        """
+        utility function, for testing
+        s is the string you want to hash, using parameters self.x and self.prime
+
+        uses a polyhash that moves forward through the string like so:
+
+        #eg for a four-character string:
+        #   c0x^3 + c1x^2 + c2x + c3
+        # 
+        # hash0 = c0  = 0 + c0
+        # hash1 = c0*x + c1  = hash0*x + c1
+        # hash2 = c0*x^2 + c1*x + c2  = hash1*x + c2
+        # hash3 = c0*x^3 + c1*x^2 + c2*x + c3  = hash2*x + c3
+        # 
+        # and more generally, hash[i] = hash[i-1]*x + ci
+
+
+        """
+        tot = 0
+        for c in s:
+            tot = (tot*self.x + ord(c)) % self.prime
+
+        return tot
+
     def polyhashes(self):
         """
         computes hash values of all possible substrings of self.s with 
-        start position 0. Uses a FORWARD polyhash function, see below, with parameters self.x and self.prime (both integers).
+        start position 0. Uses a FORWARD polyhash function, see below, 
+        with parameters self.x and self.prime (both integers).
 
         eg if s = s0,s1,s2,s3,s4 
         the substrings are s0, s0s1, s0s1s2, s0s1s2s3, s0s1s2s3s4
@@ -104,8 +125,11 @@ class HashString(object):
     def hash_substring(self, i, n):
         """
         computes the hash of the substring of self.s having
-        start position i and length n
+        start position i and length n, using the precomputed
+        prefixes stored in self.hashes
         """
+        assert i>=0 and i <len(self.s)
+        assert n>0 and i+n <= len(self.s)
 
         ## compute y = (x^n) mod prime 
         ## multiply x by itself n times
@@ -120,52 +144,88 @@ class HashString(object):
         ##    H(0-->start) = hash of substring pos(0)-->pos(i-1) inclusive
         ##  
         h = self.hashes
-        hash_ss = h[i+n-1] - (y * h[i-1])%self.prime
+
+        h_start = 0 if i==0 else h[i-1]
+        h_end = h[i+n-1]
+
+        # print("hstart = ", h_start)
+        # print("hend = ", h_end)
+    
+        hash_ss = h_end - (y * h_start)%self.prime
 
         if hash_ss < 0:                     #manage negative values
             hash_ss = (hash_ss+self.prime) % self.prime
 
-        print("substring hash is", hash_ss)
+       # print("substring hash is", hash_ss)
         return hash_ss
 
+    def check_equality(self, a=0, b=0, l=1):
+        """
+        a and b are the start indices of two length-l substrings of self.x
+        checks if the substrings a and b are equal
+        returns True if they are
+        False otherwise
+
+        """
+        ## if start indices are the same, then substrings are the same
+        if a==b:
+            return True
+
+        hash_a = self.hash_substring(a, l)
+        hash_b = self.hash_substring(b, l)
+
+        if hash_a == hash_b: 
+        # print("hashes match")
+            return True
+        else:
+            #print("hashes are different")
+            return False
 
 
-def check_equality(s, a=0, b=0, l=1, prime=PRIME1, x=X):
+def test(s):
     """
-    s is a string, a and b are the start indices of two substrings of length l
-    prime and x are the parameters to use for polyhashing
-    checks if the substrings a and b are equal
+    test function for HashString class
+    s is a string
     """
+    hs = HashString(s)
 
-    ## precompute all hash prefixes for the string s
-    h = polyhashes(s, prime, x)
+    n = len(s)
 
-    print("h=", h)
 
-    ## compute y = (X^l) mod prime 
-    ## multiply X by itself l times
-    y=1
-    for _ in range(l):
-        y = (y*x) % prime
+    ## get a random start and end position in this string
+    istart = randint(0, n-1)
+    iend = randint(istart, n-1)
 
-    ## compute the hash of each substring
-    ## hash of substring starting at a of length l is equal to
-    ##    H(0-->end) - x^l * H(0-->start)
-    ## where
-    ##    H(0-->end)   = hash of substring pos(0)-->pos(a+l-1) inclusive
-    ##    H(0-->start) = hash of substring pos(0)-->pos(a-1) inclusive
-    ##
-    ##  
-    hash_a = h[a+l-1] - (y * h[a-1])%prime
+    substring = s[istart:iend+1]
+    print("start pos is", istart, "and end pos is", iend)
+    print("the substring is", substring)
 
-    print("hash a, hash b =", Hash_a, Hash_b)
+    ## compute substring hash using the precomputed prefixes:
+    hash1 = hs.hash_substring(istart, iend-istart+1) 
+
+    ## compute substring hash directly
+    hash2 = hs.forward_polyhash(substring)
+
+    print("hash using prefixes =", hash1)
+    print("direct hash = ", hash2)
+
+
+
 
 
 if __name__ == '__main__':
-    pass
-   # print_occurrences(get_occurrences(*read_input()))
+    s = input()
+    n = int(input())   #number of queries
 
-   # (pattern, text) = (input().rstrip(), input().rstrip())
+    hs = HashString(s)
 
-    #test(pattern, text)
-    #print_occurrences(get_occurrences_opt(pattern,text))
+    for _ in range(n):
+        qs = input().split()
+        (a, b, l) = [int(element) for element in qs]
+        if hs.check_equality(a, b, l):
+            print("Yes")
+        else:
+            print("No")
+
+
+
