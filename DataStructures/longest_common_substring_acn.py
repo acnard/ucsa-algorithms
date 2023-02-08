@@ -47,11 +47,18 @@ def compare_strings(s1, s2):
     ## between k_min and k_mid-1
     while(k_max > k_min):
         k_mid = (k_max+k_min)//2     
-        if hs1.k_hashes[k_mid]
+        if common_element(hs1.k_hashes[k_mid], hs2.k_hashes[k_mid]):
+            
 
 
 
-
+def common_element(l1, l2):
+    """
+    l1 and l2 are lists
+    returns True if they contain at least one common element, 
+    otherwise False
+    """
+    return any(check in l1 for check in l2)
 
 
 
