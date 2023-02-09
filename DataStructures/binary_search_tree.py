@@ -5,16 +5,27 @@
 ##  the left subtree of X has all smaller keys than x
 ## (keys are unique)
 
+import math
+
 class Node(object):
-    def __init__(self, key, parent=None, lchild=None, rchild=None):
+    def __init__(self, key):
         """
         key is an int, the value of this node
         parent, lchild and rchild are other Node objects
         """
         self.key = key
-        self.parent=parent
-        self.lchild=lchild
-        self.rchild=rchild
+
+        ## initially created node is always
+        ## unattached to any others
+        self.parent=None
+        self.lchild=None
+        self.rchild=None
+
+        ## horizontal position of the node within 
+        ## its level in a Tree
+        ## (also counting unoccupied positions) 
+        ## 0 is the leftmost node, 1 the next one along, etc. 
+        self.hpos =None 
 
     def __str__(self):
         s = str(self.key) 
@@ -57,15 +68,15 @@ class Node(object):
         returns the number of levels of the subtree rooted at
         self, where self counts as 1 level, then add to this 
         0 if self is a leaf, otherwise add to it the levels
-        of its left or right subtree, whicever is larger
+        of its left or right subtree, whichever is larger
         """
         left_levels = 0
         right_levels = 0
 
         if self.lchild is not None:
-            left_levels = 1 + self.lchild.count_levels()
+            left_levels = self.lchild.count_levels()
         if self.rchild is not None:
-            right_levels = 1 + self.rchild.count_levels()
+            right_levels = self.rchild.count_levels()
 
         return 1 + max(left_levels, right_levels)
 
@@ -89,6 +100,7 @@ class SearchTree(object):
     def __init__(self):
         self.root = None
 
+
     def __str__(self):
         s = "Tree:\n"
         s = s+ str(self.root)
@@ -104,6 +116,7 @@ class SearchTree(object):
             x.parent = None
             x.lchild = None
             x.rchild = None
+            x.hpos = 0    ## is the 1st (and only) node in its level 
             return
 
         ## find where the key of x  fits in the tree
@@ -116,13 +129,92 @@ class SearchTree(object):
             return
 
         ## x is either left or right child of pos
+        ## note: position of left child is 2*parent position
+        ##       position of right child is 2*parent position + 1
         x.parent = pos
         x.lchild = None
         x.rchild = None
         if kval < pos.getkey():   # make it the left child
             pos.lchild = x
+            x.hpos = 2*pos.hpos
         elif kval > pos.getkey():  # make it the right child
             pos.rchild = x
+            x.hpos = 2*pos.hpos + 1
+
+    def get_nodes(self):
+        """
+        returns a list of the nodes in the tree top-down (starting
+        from root level) and within each level left-to-right
+        The 0th item is  None, then at index=1 is the root,
+        at index=2 and 3 are its left and right children
+        
+        And generally the children of the node at 
+        index=k are at 2k and 2k+1
+
+        Insert None in any unoccupied positions
+        """
+        assert self.root is not None
+
+
+        # count number of levels in the tree
+        # only root is one level, root + children is two levels
+        num_levels= self.root.count_levels()
+
+        print("there are", num_levels, "levels in the tree")
+
+        ## total number of nodes in the binary tree 
+        ## if it were complete would be 2^num_levels - 1
+        ## eg 2 levels -> 3 nodes
+        ##    3 levels -> 7 nodes, etc.
+        ## 
+        ## but we also want the index=0 position to be unused, so
+        ## in total need 2**num_levels slots in the array
+        nodes = [None]*(2**num_levels)
+
+        print("the tree can fit", 2**num_levels-1, "nodes if filled")
+
+        nodes[1] = self.root  # put root in index=1 position
+
+        # now traverse the array, putting in the children of each
+        # node encountered, or None if nonexistent
+        for i in range( len(nodes)//2 ):
+            if nodes[i] is not None: 
+                #we can do this because children set to None if nonexistent
+                    nodes[2*i] = nodes[i].lchild
+                    nodes[2*i +1] =nodes[i].rchild                    
+
+        ## for printing
+        kvals = []
+        for node in nodes:
+            if node is None:
+                kvals.append("-")
+            else:
+                kvals.append( str(node.getkey()) )
+
+        ## split kvals into row strings
+        rows = []
+        s = ""
+        for i in range(1, len(kvals)):
+            s = s + " " + kvals[i] + " "
+            if (math.log2(i+1))%1 == 0:  #is last node of a level
+                s = s + "\n"
+                rows.append(s)
+                s = ""
+
+        ## get width of longest (bottom) string
+        bottom_width = len(rows[-1])
+
+        ##and center all other strings upon it
+        ## no need to center last string
+        for i in range( len(rows)-1 ):
+            rows[i] = rows[i].center(bottom_width)
+
+
+        for row in rows:
+            print(row)
+        return nodes
+
+
 
 
     def drawtree(self):
@@ -130,8 +222,14 @@ class SearchTree(object):
         similar (but not the same) to method used in build_heap.py
         draws the tree with proper spacing
 
+        we assume that placing the root 20 characters along from
+        left margin is sufficient for tree to fit
+
         """
         assert self.root is not None
+
+ 
+
 
         # count number of levels in the tree
         # this gives the rows needed to draw the tree
@@ -142,9 +240,9 @@ class SearchTree(object):
         # if 2 levels in tree, bottom row has 2 items, etc.
         bottom_items = 2**(num_levels-1) 
 
-        # for each item we allow 4 spaces (to cover "None") plus
-        # one space before and after, for a total of 6 spaces
-        bottom_width = 6*bottom_items 
+        # for each item we allow 2 spaces plus
+        # one space before and after, for a total of 4 spaces
+        bottom_width = 4*bottom_items 
 
         
 
@@ -171,9 +269,9 @@ def test():
     tr.insert(n1)
     tr.insert(n2)
     tr.insert(n3)
-    print(tr.root)
- 
-    print (n1.get_level())
-    print (n2.get_level())
-    print (n3.get_level())
+    tr.insert(n4)
+    tr.insert(Node(2))
+    tr.insert(Node(5))
+  
+    tr.get_nodes()
 
