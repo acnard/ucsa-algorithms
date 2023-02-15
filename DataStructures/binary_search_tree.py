@@ -28,14 +28,11 @@ class Node(object):
 
     def getkey(self):
         return self.key
-
-    def attach_under(parent):
-        
-
+       
 
     def find(self, kval):
         """
-        kval is an int -- we want to return a Node in the tree 
+        kval is an int -- we want to return a Node (in the subtree rooted at self) 
         that matches this key value or, if not present, 
         the Node under which it ought to go.
 
@@ -54,6 +51,56 @@ class Node(object):
         
         else:           ## was bigger or smaller but no corresponding subtree
             return self  ## I am the node under which kval should go!
+
+    def leftmost_leaf(self):
+        """
+        returns the leftmost leaf of the subtree rooted at self
+        (ie left child of left child of left child....)
+
+        if self has no leftchild, return self
+        """
+
+        if self.lchild is None:  # I am the leftmost leaf!
+            return self
+
+        else:                    # go down recursively
+            return self.lchild.leftmost_leaf()
+
+
+    def rightmost_leaf(self):
+        """
+        returns the rightmost leaf of the subtree rooted at self
+        (ie right child of right child of right child....)
+
+        if self has no rightchild, return self
+        """
+        if self.rchild is None:  # I am the rightmost leaf!
+            return self
+
+        else:                    # go down recursively
+            return self.rchild.rightmost_leaf()    
+
+
+    def next(self):
+        """
+        returns the node in the subtree rooted at self
+         with the next largest key to self's
+        if there is no such node returns None
+
+        Note: everything in self's left subtree will be smaller than self
+             and everything in its right subtree will be greater
+             so we want to return the leftmost leaf of self's right child
+        """
+        ## no right child, everything under self will 
+        ## have a key that is less than self's, there is no bigger node
+        ## under self (note that there might be above self)
+        if self.rchild is None:
+            return None       
+
+        else:
+            return self.rchild.leftmost_leaf()
+
+
 
     def count_levels(self):
         """
@@ -112,6 +159,41 @@ class SearchTree(object):
             pos.lchild = x
         elif kval > pos.getkey():  # make it the right child
             pos.rchild = x
+
+    def get_node(self, kval):
+        """
+        kval is an int, returns the node in the tree that matches that
+        key value or, if not found, returns None
+        """
+        assert self.root is not None
+
+        node = self.root.find(kval) # node will either have key kval or 
+                                    # correspond to where kval ought to go
+
+        if node.getkey()==kval:
+            return node
+        else:
+            return None
+    def next(self, kval):
+        """
+        kval is an int, returns the node in the tree that has the next
+        highest value after kval, or None if not found
+        ie the node with the smallest key greater than kval
+        """
+        assert self.root is not None
+
+        node = self.root.find(kval) # node will either have key kval or 
+                                    # correspond to where kval ought to go
+                                    
+        if node.getkey() == kval:   # kval exists in tree, just find its next
+            return node.next()
+
+        elif node.getkey() > kval:
+            return node             # node has key bigger than kval
+
+        
+
+        
 
     def draw_tree(self):
         """
