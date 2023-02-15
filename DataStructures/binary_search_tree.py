@@ -21,11 +21,6 @@ class Node(object):
         self.lchild=None
         self.rchild=None
 
-        ## horizontal position of the node within 
-        ## its level in a Tree
-        ## (also counting unoccupied positions) 
-        ## 0 is the leftmost node, 1 the next one along, etc. 
-        self.hpos =None 
 
     def __str__(self):
         s = str(self.key) 
@@ -34,21 +29,18 @@ class Node(object):
     def getkey(self):
         return self.key
 
-    def isleaf(self):
-        """
-           returns True if this node is a leaf 
-           (has no children), otherwise False
-        """
-        if self.lchild is None and self.rchild is None:
-            return True
-        else:
-            return False
+    def attach_under(parent):
+        
+
 
     def find(self, kval):
         """
-        kval is an int -- we want to return a Node in the tree that matches this key value or, if not present, the Node under which it ought to go.
+        kval is an int -- we want to return a Node in the tree 
+        that matches this key value or, if not present, 
+        the Node under which it ought to go.
 
-        if self doesn't match, we pass it on recursively to the right or left subtree
+        if self doesn't match, we pass it on recursively 
+        to the right or left subtree
         """
 
         if self.key == kval:
@@ -80,21 +72,6 @@ class Node(object):
 
         return 1 + max(left_levels, right_levels)
 
-    def get_level(self):
-        """
-        returns the level at which self is located within its tree,
-        if it has no parent (ie is the root) the level is 1,
-        if its parent is the root its level is 2, and so on.
-        """
-
-        if self.parent == None:
-            return 1
-
-        else:
-            return 1 + self.parent.get_level()
-
-
-
 
 class SearchTree(object):
     def __init__(self):
@@ -116,7 +93,6 @@ class SearchTree(object):
             x.parent = None
             x.lchild = None
             x.rchild = None
-            x.hpos = 0    ## is the 1st (and only) node in its level 
             return
 
         ## find where the key of x  fits in the tree
@@ -129,21 +105,17 @@ class SearchTree(object):
             return
 
         ## x is either left or right child of pos
-        ## note: position of left child is 2*parent position
-        ##       position of right child is 2*parent position + 1
         x.parent = pos
         x.lchild = None
         x.rchild = None
         if kval < pos.getkey():   # make it the left child
             pos.lchild = x
-            x.hpos = 2*pos.hpos
         elif kval > pos.getkey():  # make it the right child
             pos.rchild = x
-            x.hpos = 2*pos.hpos + 1
 
-    def get_nodes(self):
+    def draw_tree(self):
         """
-        returns a list of the nodes in the tree top-down (starting
+        compiles a list of the nodes in the tree top-down (starting
         from root level) and within each level left-to-right
         The 0th item is  None, then at index=1 is the root,
         at index=2 and 3 are its left and right children
@@ -152,6 +124,8 @@ class SearchTree(object):
         index=k are at 2k and 2k+1
 
         Insert None in any unoccupied positions
+
+        Then uses this to print the tree
         """
         assert self.root is not None
 
@@ -212,41 +186,6 @@ class SearchTree(object):
 
         for row in rows:
             print(row)
-        return nodes
-
-
-
-
-    def drawtree(self):
-        """
-        similar (but not the same) to method used in build_heap.py
-        draws the tree with proper spacing
-
-        we assume that placing the root 20 characters along from
-        left margin is sufficient for tree to fit
-
-        """
-        assert self.root is not None
-
- 
-
-
-        # count number of levels in the tree
-        # this gives the rows needed to draw the tree
-        num_levels= self.root.count_levels()
-
-        # num items in bottom level, if full, is 2**(num_levels-1)
-        # eg if only 1 level in tree, bottom row has 2^0= 1 items
-        # if 2 levels in tree, bottom row has 2 items, etc.
-        bottom_items = 2**(num_levels-1) 
-
-        # for each item we allow 2 spaces plus
-        # one space before and after, for a total of 4 spaces
-        bottom_width = 4*bottom_items 
-
-        
-
-
 
 
 
@@ -273,5 +212,5 @@ def test():
     tr.insert(Node(2))
     tr.insert(Node(5))
   
-    tr.get_nodes()
+    tr.draw_tree()
 
