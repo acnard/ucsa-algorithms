@@ -6,6 +6,7 @@
 ## (keys are unique)
 
 import math
+from random import randint
 
 class Node(object):
     def __init__(self, key):
@@ -38,6 +39,10 @@ class Node(object):
 
         if self doesn't match, we pass it on recursively 
         to the right or left subtree
+
+        Note: This function does not search *upward* in the tree, only from 
+        self and downward, so to search an entire tree you must call it on the 
+        root of the tree
         """
 
         if self.key == kval:
@@ -52,55 +57,46 @@ class Node(object):
         else:           ## was bigger or smaller but no corresponding subtree
             return self  ## I am the node under which kval should go!
 
-    def leftmost_leaf(self):
+    def left_descendant(self):
         """
         returns the leftmost leaf of the subtree rooted at self
         (ie left child of left child of left child....)
 
-        if self has no leftchild, return self
+        if self has no leftchild, returns self
         """
 
         if self.lchild is None:  # I am the leftmost leaf!
             return self
 
         else:                    # go down recursively
-            return self.lchild.leftmost_leaf()
-
-
-    def rightmost_leaf(self):
-        """
-        returns the rightmost leaf of the subtree rooted at self
-        (ie right child of right child of right child....)
-
-        if self has no rightchild, return self
-        """
-        if self.rchild is None:  # I am the rightmost leaf!
-            return self
-
-        else:                    # go down recursively
-            return self.rchild.rightmost_leaf()    
+            return self.lchild.left_descendant()
 
 
     def next(self):
         """
-        returns the node in the subtree rooted at self
-         with the next largest key to self's
-        if there is no such node returns None
+        returns the node in the tree with the next largest key to self.
+        (looking both up and down the tree)
 
-        Note: everything in self's left subtree will be smaller than self
-             and everything in its right subtree will be greater
-             so we want to return the leftmost leaf of self's right child
+        Note: 
+        - everything in self's left subtree will be smaller than self, so we don't look there
+        - everything in its right subtree will be greater,
+             so we want to return the leftmost descendant of self's right child
+        - if there is no right child, go up checking parents until you find the 
+            first one greater than self
         """
-        ## no right child, everything under self will 
-        ## have a key that is less than self's, there is no bigger node
-        ## under self (note that there might be above self)
-        if self.rchild is None:
-            return None       
+  
+        ## if right child exists return its left descendant
+        if self.rchild is not None:
+            return self.rchild.left_descendant()
 
+        ## othewise find first parent with larger key
         else:
-            return self.rchild.leftmost_leaf()
+            k = self.key
+            parent = self.parent
+            while (parent is not None) and (parent.getkey() < k):
+                parent = parent.parent   #try the next parent up
 
-
+            return parent   #this will be none if no larger key foudn
 
     def count_levels(self):
         """
@@ -174,24 +170,6 @@ class SearchTree(object):
             return node
         else:
             return None
-    def next(self, kval):
-        """
-        kval is an int, returns the node in the tree that has the next
-        highest value after kval, or None if not found
-        ie the node with the smallest key greater than kval
-        """
-        assert self.root is not None
-
-        node = self.root.find(kval) # node will either have key kval or 
-                                    # correspond to where kval ought to go
-                                    
-        if node.getkey() == kval:   # kval exists in tree, just find its next
-            return node.next()
-
-        elif node.getkey() > kval:
-            return node             # node has key bigger than kval
-
-        
 
         
 
@@ -247,6 +225,8 @@ class SearchTree(object):
             else:
                 kvals.append( str(node.getkey()) )
 
+        print("kvals: ", kvals)
+
         ## split kvals into row strings
         rows = []
         s = ""
@@ -272,27 +252,29 @@ class SearchTree(object):
 
 
 
-def test():
+def test(n=8):
+    """
+    n is an int, the number of nodes you want to have in the tree
+    """
+    nodes = [Node(randint(1, 99)) for _ in range(n)]
 
-    ## make some free nodes
-    n1 = Node(3)
-    n2 = Node(12)
-    n3 = Node(4)
-    n4 = Node(7)
-
-
+    print("nodes: ")
+    for node in nodes:
+        print(node, end=", ")
+    print()
 
     ## make a tree
     tr = SearchTree()
 
 
-    ## insert nodes
-    tr.insert(n1)
-    tr.insert(n2)
-    tr.insert(n3)
-    tr.insert(n4)
-    tr.insert(Node(2))
-    tr.insert(Node(5))
+    ## insert nodes into the tree
+    for node in nodes:
+        tr.insert(node)
   
     tr.draw_tree()
+
+    print("now test the next function")
+    for node in nodes:
+        print("next node to", node, "is", node.next())
+
 
