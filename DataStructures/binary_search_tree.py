@@ -171,7 +171,28 @@ class SearchTree(object):
         else:
             return None
 
+    def rangesearch(self, start, stop):
+        """
+        start and stop are integers, returns a list of the nodes in the tree
+        which have keys between start and stop, endpoints excluded
+        """    
+        ## search for the first element
+        ## node will either have kval = start or will be 
+        ## the parent under which start ought to go
+
+        assert stop > start
+
+        node = self.root.find(start)
+        results = []
+
+        while node is not None:
+            if node.getkey() > start and node.getkey() < stop:
+                results.append(node)
+            node = node.parent
         
+        return results
+
+
 
     def draw_tree(self):
         """
@@ -278,3 +299,12 @@ def test(n=8):
         print("next node to", node, "is", node.next())
 
 
+    print("now test rangesearch")
+    start = randint(1,99)
+    stop = randint(start,99)
+
+    print("nodes in range between", start, "and", stop)
+    result = tr.rangesearch(start, stop)
+
+    for node in result:
+        print(node)
