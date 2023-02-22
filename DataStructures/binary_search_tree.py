@@ -12,7 +12,6 @@ class Node(object):
     def __init__(self, key):
         """
         key is an int, the value of this node
-        parent, lchild and rchild are other Node objects
         """
         self.key = key
 
@@ -159,10 +158,61 @@ class Node(object):
 
         return 1 + max(left_levels, right_levels)
 
+    def rotate_right(self):
+        """
+        rotates the subtree rooted at self to the right:
+        (to do this, self must have a left child)
+
+        - promote self's left child L so that it becomes the child
+          of self's parent P 
+
+        - now self is detached from the tree and has no left child: 
+          make self the right child of L,
+          and make L's previous right child R the left child of self.
+        """
+
+        L = self.lchild
+
+        # quit if no left child
+        if L is None:
+            print("cannot rotate right:", self, "has no left child")
+            return
+
+        # promote left child of self
+        L.promote()
+
+        # now self is detached from tree and has no left child:
+        # ---> move L's right child to be left child of self
+        R = L.rchild
+        if R is not None:  
+            self.lchild = R   # fix pointer from self to child
+            R.parent = self   # fix pointer from child to self
+
+        # ----> and make self the right child of L
+        L.rchild = self
+        self.parent = L
+
+
+
+
+        
+
 
 class SearchTree(object):
-    def __init__(self):
-        self.root = None
+    def __init__(self, kvals=[]):
+        """
+        kvals is a list of ints, the key values we want to insert into
+        the tree (in the provided order)
+        """
+        if len(kvals) == 0:                 # no key values provided
+            self.root = Node(randint(1,99)) # make a random root
+        else:
+            self.root = Node(kvals[0])  # use first key value for root
+
+        if len(kvals) > 1 :   
+            for kval in kvals[1:]:  #insert any remaining keyvals
+                self.insert(kval)
+
 
 
     def __str__(self):
@@ -171,33 +221,27 @@ class SearchTree(object):
 
         return s
 
-    def insert(self, x):
+    def insert(self, xval):
         """
-        x is a Node object, to be inserted into the tree
+        xval is an int, the key value we want to insert into the tree
         """
-        if self.root == None:  #make x the root of this tree
-            self.root = x 
-            x.parent = None
-            x.lchild = None
-            x.rchild = None
+
+        ## find where xval  fits in the tree
+        pos = self.root.find(xval)
+
+        # no duplicate keys allowed
+        if xval == pos.getkey(): 
+            print("cannot insert key", xval, ", it is already present in tree")
             return
 
-        ## find where the key of x  fits in the tree
-        kval = x.getkey()
-        pos = self.root.find(kval)
-
-
-        if kval == pos.getkey(): # no duplicate keys allowed
-            print("cannot insert node", x, "key already present in tree")
-            return
+        # create node x with key xval
+        x = Node(xval)  
 
         ## x is either left or right child of pos
         x.parent = pos
-        x.lchild = None
-        x.rchild = None
-        if kval < pos.getkey():   # make it the left child
+        if xval < pos.getkey():   # make it the left child
             pos.lchild = x
-        elif kval > pos.getkey():  # make it the right child
+        elif xval > pos.getkey():  # make it the right child
             pos.rchild = x
 
     def get_node(self, kval):
@@ -205,7 +249,6 @@ class SearchTree(object):
         kval is an int, returns the node in the tree that matches that
         key value or, if not found, returns None
         """
-        assert self.root is not None
 
         node = self.root.find(kval) # node will either have key kval or 
                                     # correspond to where kval ought to go
@@ -372,25 +415,19 @@ def test(n=8):
     """
     n is an int, the number of nodes you want to have in the tree
     """
-    nodes = [Node(randint(1, 99)) for _ in range(n)]
-
-    print("nodes: ")
-    for node in nodes:
-        print(node, end=", ")
-    print()
-
-    ## make a tree
-    tr = SearchTree()
+    kvals = [randint(1, 99) for _ in range(n)]
 
 
-    ## insert nodes into the tree
-    for node in nodes:
-        tr.insert(node)
-  
+    print("kvals: ", kvals)
+
+
+    ## make a tree and draw it
+    tr = SearchTree(kvals)
     tr.draw_tree()
 
     print("now test the next function")
-    for node in nodes:
+    for kval in kvals:
+        node = tr.get_node(kval)
         print("next node to", node, "is", node.next())
 
 
