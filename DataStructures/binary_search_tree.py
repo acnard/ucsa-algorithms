@@ -29,7 +29,51 @@ class Node(object):
 
     def getkey(self):
         return self.key
-       
+
+
+    def promote(self):
+        """
+        promotes self to the position occupied by its parent
+
+        note that in practice this detaches the subtree rooted at parent
+        from the tree, and attaches the subtree roted at self in its place
+        """
+        P = self.parent
+        if P is None:
+            print("cannot promote", self, ", it has no parent")
+            return
+
+        GP = P.parent       # grandparent is new parent (may be None if parent is root)
+        self.parent = GP        # fix pointer from self to new parent
+
+        if GP is not None:      # fix pointer from new parent to self
+            if P == GP.lchild:
+                GP.lchild = self
+            elif P == GP.rchild:
+                GP.rchild = self
+
+        ## and detach P from its parent
+        P.parent = None
+
+
+    def detach(self):
+        """
+        detaches self from its parent
+
+        in practice this detaches the subtree rooted at self from the tree
+        """
+        P = self.parent
+        if P is None:
+            print("cannot detach", self, ", it has no parent")
+            return
+
+        if self == P.lchild:  # clear pointer from parent to self
+            P.lchild = None
+        elif self == P.rchild:
+            P.rchild = None
+
+        self.parent = None   #clear pointer from self to parent
+
 
     def find(self, kval):
         """
@@ -192,6 +236,57 @@ class SearchTree(object):
         
         return results
 
+    def delete(self, xval):
+        """
+        xval is the key value of a node object X that we want to delete from the tree.
+
+        We find the node X matching xval in the tree, and then 
+        apply delete algorithm as follows (do checks in order):
+
+        - if X is a leaf (no left or right child) then can just delete it.
+
+        - elif X has *only a left child*, can just promote the left child. 
+          (even if that left child has a right subtree, this will cause no conflict
+           since we are promoting it to a position with no right subtree) 
+
+        - elif X has a right child (either only a right child, or both a left and right child)
+            1) find the "next" node N in that right subtree 
+               (leftmost descendant of right child),
+            2) swop into X the key value of N
+            3) delete N (it will either be a leaf or have only a right child)
+            4) if N had a right child R, promote R to the position previously
+               occupid by N
+
+        Note: since N is the successor of X, it is guaranteed to be bigger than
+        anything in the left subtree of X, and also smaller than anything else in the
+        right subtree of X, so the value of N can go in the position occupied by X
+        
+        """
+        # find the node in the tree
+        X = self.get_node(xval)
+        if X is None:
+            print("key value", xval, "not found in tree")
+            return
+        
+        # case if X has a right child (may or may not also have left child)
+        if X.rchild is not None:
+            N = X.next()            # N = leftmost descendant of X's right child
+            X.key = N.getkey()      # swop into X key value of N
+
+            R = N.rchild     
+            if R is not None:       # if N has a right child R, promote it
+                R.promote()
+            else:
+                N.detach()          # otherwise just detach N
+
+        # case if X has only a left child    
+        elif X.lchild is not None:
+            X.lchild.promote()     # just promote the left child
+
+        # case if X has neither left nor right child
+        else:
+            X.detach()               # just detach
+
 
 
     def draw_tree(self):
@@ -308,3 +403,5 @@ def test(n=8):
 
     for node in result:
         print(node)
+
+    return tr  ##return the tere
