@@ -21,6 +21,9 @@ class Node(object):
         self.lchild=None
         self.rchild=None
 
+        ## set to true if node is made root of a tree
+        self.is_root = False
+
 
     def __str__(self):
         s = str(self.key) 
@@ -50,9 +53,12 @@ class Node(object):
                 GP.lchild = self
             elif P == GP.rchild:
                 GP.rchild = self
+        else:                   # no grandparent means P was the root
+            P.is_root = False
+            self.is_root = True
 
         ## and detach P from its parent
-        P.parent = None
+        P.parent = None 
 
 
     def detach(self):
@@ -192,9 +198,6 @@ class Node(object):
         L.rchild = self
         self.parent = L
 
-
-
-
         
 
 
@@ -208,6 +211,9 @@ class SearchTree(object):
             self.root = Node(randint(1,99)) # make a random root
         else:
             self.root = Node(kvals[0])  # use first key value for root
+
+        # tell root node it's a root
+        self.root.is_root = True
 
         if len(kvals) > 1 :   
             for kval in kvals[1:]:  #insert any remaining keyvals
