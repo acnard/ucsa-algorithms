@@ -21,8 +21,8 @@ class Node(object):
         self.lchild=None
         self.rchild=None
 
-        ## set to true if node is made root of a tree
-        self.is_root = False
+        ## stores reference to tree if node is the root of a tree
+        self.is_root_of = None
 
 
     def __str__(self):
@@ -36,6 +36,7 @@ class Node(object):
     def promote(self):
         """
         promotes self to the position occupied by its parent
+        (if parent was the root, this means self becomes root)
 
         note that in practice this detaches the subtree rooted at parent
         from the tree, and attaches the subtree roted at self in its place
@@ -53,9 +54,13 @@ class Node(object):
                 GP.lchild = self
             elif P == GP.rchild:
                 GP.rchild = self
-        else:                   # no grandparent means P was the root
-            P.is_root = False
-            self.is_root = True
+
+        # if  P was root of a tree, transfer it to self
+        tree = P.is_root_of
+        if tree is not None:
+            tree.set_root(self)
+            P.is_root_of = None
+
 
         ## and detach P from its parent
         P.parent = None 
@@ -184,7 +189,7 @@ class Node(object):
             print("cannot rotate right:", self, "has no left child")
             return
 
-        # promote left child of self
+        # promote left child of self (if self was root, now L becomes root)
         L.promote()
 
         # now self is detached from tree and has no left child:
@@ -212,8 +217,8 @@ class SearchTree(object):
         else:
             self.root = Node(kvals[0])  # use first key value for root
 
-        # tell root node it's a root
-        self.root.is_root = True
+        # tell root node it's the root of this tree
+        self.root.is_root_of = self
 
         if len(kvals) > 1 :   
             for kval in kvals[1:]:  #insert any remaining keyvals
@@ -226,6 +231,15 @@ class SearchTree(object):
         s = s+ str(self.root)
 
         return s
+
+    def set_root(self, n):
+        """
+        n is a node object, sets it as the root of this tree
+
+        note that the root essentially defines the entire tree
+        """
+        self.root = n   # tell this tree that n is the new root
+        n.is_root_of = self  # tell n it's now root of this tree
 
     def insert(self, xval):
         """
