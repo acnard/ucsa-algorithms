@@ -1,4 +1,8 @@
 # python3
+import sys
+import threading
+
+
 class Tree(object):
     def __init__(self, keys, lchilds, rchilds):
         """
@@ -23,95 +27,37 @@ class Tree(object):
     def get_root(self):
         return self.keys[0]
 
-    def get_lchild(self, key):
-        """
-        key is an int, the key of a node in the tree
-        returns the key value of left child of that node
-        or None if node has no left child
-        """
-        assert key in self.keys
 
-        i = self.keys.index(key)
-        i_left = self.lchilds[i]
-
-        if i_left == -1:
-            return None
-        else:
-            return self.keys[i_left]
-
-    def get_rchild(self, key):
-        """
-        key is an int, the key of a node in the tree
-        returns the key value of right child of that node
-        or None if node has no right child
-        """
-        assert key in self.keys
-
-        i = self.keys.index(key)
-        i_right = self.rchilds[i]
-
-        if i_right == -1:
-            return None
-        else:
-            return self.keys[i_right]
-
-    def get_parent(self, key):
-        """
-        key is an int, the key of a node in the tree
-        returns the key value of its parent, or None
-        if it's the root
-        """
-        assert key in self.keys
-
-        ichild = self.keys.index(key)
-
-        if ichild in self.lchilds:
-            iparent = self.lchilds.index(ichild)
-        elif ichild in self.rchilds:
-            iparent = self.rchilds.index(ichild)
-        else:
-            iparent = None   #only root has no parent
-
-        if iparent is not None:
-            return self.keys[iparent]
-        else:
-            return None
-
-
-
-    def order(self, type="in", k=None):
+    def order(self, type="in", i=0):
         """
         does an order traversal of this tree, starting from the node 
-        with key value k (or starting from root if not specified)
+        with index i in keys[] (will start from root if not specified)
 
         type is a string, specifies whether the traversal is 
         "in", "pre" or "post" order
         """
         assert type=="in" or type=="pre" or type=="post"
 
-        ## first recursive call, start from root
-        if k == None:
-            k = self.get_root()
+        k = self.keys[i]  # key value k of node i
 
         if type == "pre":
             print(k, end=" ")  # print k's own value here for PRE-ORDER
 
-        ## see if k has a left child
-        kleft = self.get_lchild(k)
-        if kleft is not None:
-            self.order(type, kleft)    ## RECURSIVE call on LEFT subtree of k
+        ## see if node i has a left child
+        ileft = self.lchilds[i]
+        if ileft != -1:
+            self.order(type, ileft)    ## RECURSIVE call on LEFT subtree of k
 
         if type == "in":
             print(k, end=" ")  # print k's own value her for IN-ORDER
 
-        ## see if k has right child
-        kright = self.get_rchild(k)  ## RECURSIVE call or RIGHT subtree of k
-        if kright is not None:
-            self.order(type, kright)
+        ## see if node i has right child
+        iright = self.rchilds[i]  ## RECURSIVE call or RIGHT subtree of k
+        if iright != -1:
+            self.order(type, iright)
 
         if type == "post":
             print(k, end=" ")  # print k's own value her for POST-ORDER
-
 
 
 def test():
@@ -169,5 +115,17 @@ def main():
     print()
     tr.order("post")
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+
+#     main()
+
+## recursion limit in python is 1000 so we must increase it
+sys.setrecursionlimit(10**6) # max depth of recursion
+
+## we also change the stack size
+threading.stack_size(2**27)  # new thread will get stack of such size
+
+## create a new thread for main()
+mythread = threading.Thread(target=main)
+mythread.start()
+mythread.join()     #wait for it to finish   
