@@ -19,6 +19,7 @@ class Tree(object):
         s = s + "rchilds: " + str(self.rchilds) + "\n"
         return s
 
+
     def get_root(self):
         return self.keys[0]
 
@@ -77,37 +78,61 @@ class Tree(object):
             return None
 
 
-    def in_order(self, k = None):
+
+    def order(self, type="in", k=None):
         """
-        does an in-order traversal of this tree, starting from the node with key value k
+        does an order traversal of this tree, starting from the node 
+        with key value k (or starting from root if not specified)
+
+        type is a string, specifies whether the traversal is 
+        "in", "pre" or "post" order
         """
+        assert type=="in" or type=="pre" or type=="post"
 
         ## first recursive call, start from root
         if k == None:
             k = self.get_root()
 
- 
+        if type == "pre":
+            print(k, end=" ")  # print k's own value here for PRE-ORDER
+
         ## see if k has a left child
         kleft = self.get_lchild(k)
         if kleft is not None:
-            self.in_order(kleft)    ## RECURSIVE call on LEFT subtree of k
+            self.order(type, kleft)    ## RECURSIVE call on LEFT subtree of k
 
-        print(k)   ## Print k's own value
+        if type == "in":
+            print(k, end=" ")  # print k's own value her for IN-ORDER
 
         ## see if k has right child
         kright = self.get_rchild(k)  ## RECURSIVE call or RIGHT subtree of k
         if kright is not None:
-            self.in_order(kright)
+            self.order(type, kright)
+
+        if type == "post":
+            print(k, end=" ")  # print k's own value her for POST-ORDER
 
 
 
 def test():
-    keys = [4, 2, 5, 1, 3]
-    lchilds = [1, 3, -1, -1, -1]
-    rchilds = [2, 4, -1, -1, -1]
+    # keys = [4, 2, 5, 1, 3]
+    # lchilds = [1, 3, -1, -1, -1]
+    # rchilds = [2, 4, -1, -1, -1]
+
+    keys = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    lchilds = [7, -1, -1, 8, 3, -1, 1, 5, -1, -1]
+    rchilds = [2, -1, 6, 9, -1, -1, -1, 4, -1, -1]
+
     tr = Tree(keys, lchilds, rchilds)
     print(tr)
+
+    tr.order("in")
+    print()
+    tr.order("pre")
+    print()
+    tr.order("post")
     return tr
+
 
 
 def main():
@@ -131,12 +156,18 @@ def main():
         lchild.append(l)
         rchild.append(r)
 
-    print("keys:", key)
-    print("lchilds", lchild)
-    print("rchilds", rchild)
+    # print("keys:", key)
+    # print("lchilds", lchild)
+    # print("rchilds", rchild)
 
     tr = Tree(key, lchild, rchild)
-    print(tr)
+    # print(tr)
 
+    tr.order("in")
+    print()
+    tr.order("pre")
+    print()
+    tr.order("post")
 
-
+if __name__ == '__main__':
+    main()
